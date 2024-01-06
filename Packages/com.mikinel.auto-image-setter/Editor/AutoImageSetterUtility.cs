@@ -7,9 +7,28 @@ namespace mikinel.vrc.AutoImageSetter.Editor
 {
     public static class AutoImageSetterUtility
     {
-        public static readonly string importPath = "Assets/__AutoImageSetter";
-        public static readonly string[] imageExtensions = { "png", "jpg", "jpeg" };
+        private static readonly string importPath = "Assets/__AutoImageSetter";
+        private static readonly string[] imageExtensions = { "png", "jpg", "jpeg" };
 
+        private static readonly string pathSaveKey = "AutoImageSetterUtility_LastPath";
+
+        public static string OpenFilePanel()
+        {
+            // 前回のパスを取得、なければデスクトップを指定
+            var lastPath = EditorPrefs.GetString(pathSaveKey, System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop));
+            var path = EditorUtility.OpenFilePanel("Select Image", lastPath, string.Join(",", imageExtensions));
+
+            if (string.IsNullOrEmpty(path))
+            {
+                return path;
+            }
+            
+            var directory = Path.GetDirectoryName(path);
+            EditorPrefs.SetString(pathSaveKey, directory);
+
+            return path;
+        }
+        
         public static void ImportImageAndSet(string path, AutoImageSetterTarget target)
         {
             var fileName = Path.GetFileName(path);
