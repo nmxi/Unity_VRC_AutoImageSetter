@@ -41,9 +41,6 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         private Action<Texture2D> onCropImage;
 
         // 固定値
-        private static float MINIMUM_IMAGE_SCALE = 0.01f;
-        private static float MAXIMUM_IMAGE_SCALE = 3f;
-        private static float IMAGE_SCALE_STEP = 0.05f;
         private static readonly Color GRID_COLOR = new(0.5f, 0.5f, 0.5f, 0.25f);
         private static readonly Color SELECTION_AREA_GRID_COLOR = new(1f, 0.92f, 0f, 0.5f);
         private static readonly Color SELECTION_AREA_TEXT_COLOR = new(1f, 1f, 1f, 1f);
@@ -157,28 +154,6 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             //CurrentImageSize
             _currentImageSizeLabel = settingsArea.Q<Label>("CurrentImageSize");
 
-            //FitButton
-            _fitScaleButton = settingsArea.Q<Button>("Fit");
-            _fitScaleButton.RegisterCallback<MouseUpEvent>((e) => { AutoDrawRectFitting(); });
-
-            //ZoomInButton
-            _zoomInButton = settingsArea.Q<Button>("ZoomIn");
-            _zoomInButton.RegisterCallback<MouseUpEvent>((e) =>
-            {
-                _imageScale = Mathf.Min(MAXIMUM_IMAGE_SCALE, _imageScale + IMAGE_SCALE_STEP);
-                ResetSelection();
-                _imageUpdated = true; // 画像が更新されたことを示す
-            });
-
-            //ZoomOutButton
-            _zoomOutButton = settingsArea.Q<Button>("ZoomOut");
-            _zoomOutButton.RegisterCallback<MouseUpEvent>((e) =>
-            {
-                _imageScale = Mathf.Max(MINIMUM_IMAGE_SCALE, _imageScale - IMAGE_SCALE_STEP);
-                ResetSelection();
-                _imageUpdated = true; // 画像が更新されたことを示す
-            });
-
             //EditArea
             var editAreaImguiContainer = editArea.Q<IMGUIContainer>();
             editAreaImguiContainer.onGUIHandler = () =>
@@ -188,6 +163,8 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                 {
                     ResetSelection();
                     _lastWindowRect = position;
+                    
+                    AutoDrawRectFitting();
 
                     _currentWindowRect = position;
                 }
@@ -235,8 +212,9 @@ namespace mikinel.vrc.AutoImageSetter.Editor
 
                     HandleSelection(_currentDrawRect);
 
-                    if (_isSelecting || _selectionRect.size != Vector2.zero)
+                    if (_isSelecting || _selectionRect.size.x > 0 || _selectionRect.size.y > 0)
                     {
+                        // 選択範囲のグリッドを描画
                         DrawSelectionRect();
                     }
 
@@ -260,13 +238,6 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             _currentImageSizeLabel.text = targetImage != null
                 ? $"{_currentRawImageSize.x}px x {_currentRawImageSize.y}px"
                 : "0px x 0px";
-            _fitScaleButton.style.display = _imageScale != _fitScale ? DisplayStyle.Flex : DisplayStyle.None;
-            _zoomOutButton.style.display = targetImage != null && _imageScale > MINIMUM_IMAGE_SCALE
-                ? DisplayStyle.Flex
-                : DisplayStyle.None;
-            _zoomInButton.style.display = targetImage != null && _imageScale < MAXIMUM_IMAGE_SCALE
-                ? DisplayStyle.Flex
-                : DisplayStyle.None;
         }
 
         /// <summary>
@@ -274,7 +245,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         /// </summary>
         private void CenterSelection()
         {
-            if (targetImage == null || _selectionRect.size == Vector2.zero)
+            if (targetImage == null || _selectionRect.size.x <= 0 || _selectionRect.size.y <= 0)
             {
                 return;
             }
@@ -365,7 +336,8 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             var widthScale = (_currentWindowRect.width - 20) / _currentRawImageSize.x;
 
             // ウィンドウの高さとUIの高さを考慮して、高さに基づいてスケールを計算
-            var heightScale = (rootVisualElement.layout.height - 20) / _currentRawImageSize.y;
+            var editArea = rootVisualElement.Q<VisualElement>("EditArea");
+            var heightScale = (editArea.layout.height) / _currentRawImageSize.y;
 
             // 幅と高さのスケールのうち、小さい方を採用
             _imageScale = Mathf.Min(widthScale, heightScale);
@@ -646,8 +618,6 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         {
             _isSelecting = false;
             _selectionRect = Rect.zero;
-            
-            MaximizeSelection();
         }
 
         /// <summary>
