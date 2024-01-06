@@ -43,6 +43,7 @@
             <ui:VisualElement name="Space" style="flex-grow: 1;" />
         </ui:VisualElement>
     </ui:VisualElement>
+    <ui:VisualElement name="Space" style="height: 5px;" />
     <ui:VisualElement name="EditArea" style="flex-grow: 1; background-color: rgba(34, 34, 34, 0.8);">
         <ui:IMGUIContainer style="flex-grow: 1;" />
     </ui:VisualElement>

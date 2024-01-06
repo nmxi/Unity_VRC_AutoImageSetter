@@ -562,9 +562,8 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             EditorGUI.DrawRect(_selectionRect, new Color(0.5f, 0.5f, 0.5f, 0.25f));
             Handles.color = SELECTION_AREA_GRID_COLOR;
 
-            //DrawWireCubeの上辺が1px見切れるので、1px分下にずらす
-            var selectionRectWithOffset = new Rect(_selectionRect.x, _selectionRect.y + 1, _selectionRect.width,
-                _selectionRect.height);
+            //DrawWireCubeの上辺が1px見切れるので、1px分下にずらし、下辺は1pxはみ出るので、1px分上にずらす
+            var selectionRectWithOffset = new Rect(_selectionRect.x, _selectionRect.y + 1, _selectionRect.width, _selectionRect.height - 1);
             Handles.DrawWireCube(selectionRectWithOffset.center, selectionRectWithOffset.size);
 
             // 選択範囲に十字線を描画
