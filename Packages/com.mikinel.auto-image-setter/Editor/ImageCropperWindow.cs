@@ -25,7 +25,6 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         private Rect _currentWindowRect; // 現在のウィンドウサイズ
         private Rect _lastWindowRect;
         private Rect _currentDrawRect; // 現在の画像の描画領域
-        private float _uiHeight; // UIの高さ
         private float _drawTextureAdjustX; // 画像の描画領域の余白サイズ
         private Vector2 _initialMousePosition; // 範囲選択の開始位置
         private Vector2 _lastMousePosition; // 選択範囲の移動開始時のマウス位置
@@ -42,7 +41,6 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         private Action<Texture2D> onCropImage;
 
         // 固定値
-        private static readonly Vector2 WINDOW_SIZE = new(810, 720);
         private static float MINIMUM_IMAGE_SCALE = 0.01f;
         private static float MAXIMUM_IMAGE_SCALE = 3f;
         private static float IMAGE_SCALE_STEP = 0.05f;
@@ -68,7 +66,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             // ウィンドウのサイズを設定
             var window = GetWindow<ImageCropperWindow>("Image Cropper");
 
-            window.minSize = WINDOW_SIZE;
+            window.minSize = new Vector2(810, 720);
 
             window.DrawGUI();
         }
@@ -89,7 +87,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             // ウィンドウのサイズを設定
             var window = GetWindow<ImageCropperWindow>("Image Cropper");
 
-            window.minSize = WINDOW_SIZE;
+            window.minSize = new Vector2(810, 620);
 
             window.targetImage = targetImage;
             window.isAdjustRatio = isAdjustRatio;
@@ -183,11 +181,6 @@ namespace mikinel.vrc.AutoImageSetter.Editor
 
             //EditArea
             var editAreaImguiContainer = editArea.Q<IMGUIContainer>();
-            editArea.schedule.Execute(() =>
-            {
-                _uiHeight = editArea.resolvedStyle.height;
-                AutoDrawRectFitting();
-            }).StartingIn(32);
             editAreaImguiContainer.onGUIHandler = () =>
             {
                 // ウィンドウのサイズが変更された場合、選択をリセット
@@ -372,7 +365,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             var widthScale = (_currentWindowRect.width - 20) / _currentRawImageSize.x;
 
             // ウィンドウの高さとUIの高さを考慮して、高さに基づいてスケールを計算
-            var heightScale = (_uiHeight - 20) / _currentRawImageSize.y;
+            var heightScale = (rootVisualElement.layout.height - 20) / _currentRawImageSize.y;
 
             // 幅と高さのスケールのうち、小さい方を採用
             _imageScale = Mathf.Min(widthScale, heightScale);
