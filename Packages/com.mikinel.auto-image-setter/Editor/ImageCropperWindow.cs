@@ -618,6 +618,8 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         {
             _isSelecting = false;
             _selectionRect = Rect.zero;
+            
+            MaximizeSelection();
         }
 
         /// <summary>
