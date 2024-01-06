@@ -85,3 +85,15 @@ jobs:
             ${{ env.unityPackage }}
             ${{ env.packagePath }}/package.json
           tag_name: ${{ env.version }}
+
+      # Call workflow
+      - name: Call Workflow
+        run: |
+          TOKEN=${{ secrets.VPM_REPOS_PAT }}
+
+          curl \
+            -X POST \
+            -H "Authorization: token $TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/nmxi/vpm-repos/dispatches \
+            -d '{"event_type":"on-demand-build"}'
