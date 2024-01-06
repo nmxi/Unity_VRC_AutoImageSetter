@@ -14,17 +14,15 @@ namespace mikinel.vrc.AutoImageSetter.Editor
 
         public static string OpenFilePanel()
         {
-            // 前回のパスを取得、なければデスクトップを指定
-            var lastPath = EditorPrefs.GetString(pathSaveKey, System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop));
+            // 前回のパスを取得、なければマイドキュメントを指定
+            var lastPath = EditorPrefs.GetString(pathSaveKey, System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments));
             var path = EditorUtility.OpenFilePanel("Select Image", lastPath, string.Join(",", imageExtensions));
 
-            if (string.IsNullOrEmpty(path))
+            if (!string.IsNullOrEmpty(path))
             {
-                return path;
+                var directory = Path.GetDirectoryName(path);
+                EditorPrefs.SetString(pathSaveKey, directory);
             }
-            
-            var directory = Path.GetDirectoryName(path);
-            EditorPrefs.SetString(pathSaveKey, directory);
 
             return path;
         }
