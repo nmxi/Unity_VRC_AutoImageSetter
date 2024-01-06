@@ -1,0 +1,60 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/mikinel/ImageCropper/Editor/uss/ImageCropperStyle.uss?fileID=7433441132597879392&amp;guid=080ae10302bf6214992658d5583974b5&amp;type=3#ImageCropperStyle" />
+    <ui:VisualElement name="SettingsArea">
+        <ui:VisualElement name="VisualElement" style="flex-direction: row; height: auto;">
+            <ui:VisualElement name="CropSettings" class="RoundedBackGround" style="width: 270px; visibility: visible; display: flex; height: 150px;">
+                <ui:Label tabindex="-1" text="Crop Settings" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                <ui:VisualElement style="flex-grow: 1; flex-direction: column; padding-left: 10px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px;">
+                    <ui:VisualElement name="TargetImage" style="height: 60px;">
+                        <ui:IMGUIContainer />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="Space" style="height: 5px;" />
+                    <ui:VisualElement style="flex-grow: 1;">
+                        <ui:VisualElement style="flex-direction: row; height: 24px;">
+                            <ui:Label tabindex="-1" text="Adjust Ratio" parse-escape-sequences="true" display-tooltip-when-elided="true" style="flex-shrink: 1; flex-grow: 0; min-width: 102px; -unity-text-align: middle-left;" />
+                            <ui:Toggle name="AdjustRatio" style="flex-shrink: 1; flex-grow: 1;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement style="height: 24px; flex-direction: row;">
+                            <ui:Label tabindex="-1" text="Ratio" parse-escape-sequences="true" display-tooltip-when-elided="true" style="flex-shrink: 1; min-width: 102px; -unity-text-align: middle-left;" />
+                            <ui:FloatField value="1" name="Width" style="width: 60px; flex-grow: 1; flex-shrink: 1;" />
+                            <ui:Label tabindex="-1" text=" :" parse-escape-sequences="true" display-tooltip-when-elided="true" style="-unity-text-align: middle-center; flex-shrink: 1;" />
+                            <ui:FloatField value="1" name="Height" style="width: 60px; flex-shrink: 1; flex-grow: 1;" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="CropControl" style="flex-direction: row-reverse; flex-grow: 1;">
+                <ui:VisualElement style="flex-direction: row; align-self: flex-end;">
+                    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="CenterSelection" tooltip="選択範囲を画像の中央に一致" class="RoundedButton" style="width: 40px; height: 40px; padding-left: 5px; padding-right: 5px; padding-top: 5px; padding-bottom: 5px;">
+                        <ui:VisualElement name="Icon" style="flex-grow: 1; background-image: url(&apos;project://database/Assets/mikinel/ImageCropper/Editor/Icons/crosshairs@3x.png?fileID=2800000&amp;guid=7adb47d6252a8184a9f136ec1cb4d5b9&amp;type=3#crosshairs@3x&apos;);" />
+                    </ui:Button>
+                    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="MaximizeSelection" tooltip="選択範囲を最大化" class="RoundedButton" style="width: 40px; height: 40px; padding-left: 5px; padding-right: 5px; padding-top: 5px; padding-bottom: 5px;">
+                        <ui:VisualElement name="Icon" style="flex-grow: 1; background-image: url(&apos;project://database/Assets/mikinel/ImageCropper/Editor/Icons/arrows-diagonals@3x.png?fileID=2800000&amp;guid=03d966ef713f7284f912ba64aee8575b&amp;type=3#arrows-diagonals@3x&apos;);" />
+                    </ui:Button>
+                    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="CropImage" text="CROP" tooltip="画像のクロップを実行" class="RoundedButton" style="background-color: rgb(176, 139, 107); width: 150px; font-size: 20px; -unity-font-style: bold; padding-left: 5px; padding-right: 5px; padding-top: 5px; padding-bottom: 5px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="Space" style="height: 10px;" />
+        <ui:VisualElement style="flex-direction: row; background-color: rgba(152, 110, 89, 0.17); height: 24px;">
+            <ui:VisualElement name="Space" style="width: 24px;" />
+            <ui:Label tabindex="-1" text="Current Image Size : " parse-escape-sequences="true" display-tooltip-when-elided="true" style="-unity-text-align: middle-left;" />
+            <ui:Label tabindex="-1" text="0px x 0px" parse-escape-sequences="true" display-tooltip-when-elided="true" name="CurrentImageSize" style="-unity-text-align: middle-left;" />
+            <ui:VisualElement name="Space" style="flex-grow: 1;" />
+            <ui:VisualElement style="flex-grow: 1; flex-direction: row; position: absolute; right: 0; bottom: 0;">
+                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="Fit" tooltip="画像をウィンドウサイズに合わせる" style="width: 30px; height: 30px; border-top-left-radius: 100%; border-bottom-left-radius: 100%; border-top-right-radius: 100%; border-bottom-right-radius: 100%; opacity: 1; padding-left: 5px; padding-right: 5px; padding-top: 5px; padding-bottom: 5px;">
+                    <ui:VisualElement name="Icon" style="flex-grow: 1; background-image: url(&apos;project://database/Assets/mikinel/ImageCropper/Editor/Icons/maximize@3x.png?fileID=2800000&amp;guid=0b256d815a226414fb2e5b2b5bde7641&amp;type=3#maximize@3x&apos;);" />
+                </ui:Button>
+                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="ZoomOut" tooltip="画像の表示範囲を縮小" style="width: 30px; height: 30px; border-top-left-radius: 100%; border-bottom-left-radius: 100%; border-top-right-radius: 100%; border-bottom-right-radius: 100%; padding-left: 5px; padding-right: 5px; padding-top: 5px; padding-bottom: 5px;">
+                    <ui:VisualElement name="Icon" style="flex-grow: 1; background-image: url(&apos;project://database/Assets/mikinel/ImageCropper/Editor/Icons/zoom-out@3x.png?fileID=2800000&amp;guid=a314ec53a6245cb41b6034990cdb0782&amp;type=3#zoom-out@3x&apos;);" />
+                </ui:Button>
+                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="ZoomIn" tooltip="画像の表示範囲を拡大" style="width: 30px; border-top-left-radius: 100%; border-bottom-left-radius: 100%; border-top-right-radius: 100%; border-bottom-right-radius: 100%; -unity-background-scale-mode: scale-and-crop; height: 30px; padding-left: 5px; padding-right: 5px; padding-top: 5px; padding-bottom: 5px;">
+                    <ui:VisualElement name="Icon" style="flex-grow: 1; background-image: url(&apos;project://database/Assets/mikinel/ImageCropper/Editor/Icons/zoom-in@3x.png?fileID=2800000&amp;guid=26f0e43b22651b243992e2056aa48b0a&amp;type=3#zoom-in@3x&apos;);" />
+                </ui:Button>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="EditArea" style="flex-grow: 1; background-color: rgba(34, 34, 34, 0.8);">
+        <ui:IMGUIContainer style="flex-grow: 1;" />
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,18 @@
+{
+  "name": "com.mikinel.auto-image-setter",
+  "displayName": "Auto Image Setter",
+  "version": "0.1.0",
+  "description": "Auto Image Setter",
+  "gitDependencies": {},
+  "vpmDependencies": {
+    "com.vrchat.worlds": "3.5.0"
+  },
+  "author": {
+    "name": "mikinel",
+    "email": "mikki.unity@gmail.com",
+    "url": "https://twitter.com/kemmimilk"
+  },
+  "legacyFolders": {},
+  "legacyFiles": {},
+  "localPath": "F:\\GitHub\\Unity_VRC_AutoImageSetter\\Packages\\com.mikinel.auto-image-setter"
+}

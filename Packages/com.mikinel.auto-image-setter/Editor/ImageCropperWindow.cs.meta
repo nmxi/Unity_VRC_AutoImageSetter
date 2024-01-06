@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b9a3f74ce00c4438af0ce9fcce6730b2
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - m_ViewDataDictionary: {instanceID: 0}
+  - _imageCropperUxml: {fileID: 9197481963319205126, guid: fbfe127f5f5063546815c5fd3f8acb71,
+      type: 3}
+  - targetImage: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
