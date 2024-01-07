@@ -32,7 +32,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         /// <summary>
         /// 範囲選択の矩形領域を描画できるかどうか
         /// </summary>
-        public bool CanDrawSelectionRect => IsSelecting || IsMovingSelection || _selectionRect.size != Vector2.zero;
+        public bool CanDrawSelectionRect => IsSelecting || _selectionRect.size.x > 0 || _selectionRect.size.y > 0;
 
         /// <summary>
         /// 再描画が必要かどうか

@@ -22,14 +22,11 @@ namespace mikinel.vrc.AutoImageSetter.Editor
 
         // 一時的に保持する変数
         private Vector2 _currentRawImageSize; // 現在の画像サイズ
-        private Rect _currentWindowRect; // 現在のウィンドウサイズ
         private Rect _lastWindowRect;
         private Rect _currentDrawRect; // 現在の画像の描画領域
-        private float _uiHeight; // UIの高さ
         private float _drawTextureAdjustX; // 画像の描画領域の余白サイズ
         private Vector2 _scrollPosition; // ScrollView のスクロール位置
         private float _imageScale = 1f; // 画像のスケール管理用変数
-        private float _fitScale = 1f; // 画像をウィンドウにフィットさせるためのスケール
         private bool _imageSelected = false; // 編集する画像が選択されたかどうかを追跡するフラグ
         private bool _imageUpdated = false; // 画像が更新されたかどうかを追跡するフラグ
 
@@ -37,10 +34,6 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         private Action<Texture2D> onCropImage;
 
         // 固定値
-        private static readonly Vector2 WINDOW_SIZE = new(810, 720);
-        private static float MINIMUM_IMAGE_SCALE = 0.01f;
-        private static float MAXIMUM_IMAGE_SCALE = 3f;
-        private static float IMAGE_SCALE_STEP = 0.05f;
         private static readonly Color GRID_COLOR = new(0.5f, 0.5f, 0.5f, 0.25f);
         private static readonly Color SELECTION_AREA_GRID_COLOR = new(1f, 0.92f, 0f, 0.5f);
         private static readonly Color SELECTION_AREA_TEXT_COLOR = new(1f, 1f, 1f, 1f);
@@ -70,7 +63,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             // ウィンドウのサイズを設定
             var window = GetWindow<ImageCropperWindow>("Image Cropper");
 
-            window.minSize = WINDOW_SIZE;
+            window.minSize = new Vector2(810, 720);
 
             window.DrawGUI();
         }
@@ -91,7 +84,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             // ウィンドウのサイズを設定
             var window = GetWindow<ImageCropperWindow>("Image Cropper");
 
-            window.minSize = WINDOW_SIZE;
+            window.minSize = new Vector2(810, 620);
 
             window.targetImage = targetImage;
             window.isAdjustRatio = isAdjustRatio;
@@ -177,35 +170,8 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             //CurrentImageSize
             _currentImageSizeLabel = settingsArea.Q<Label>("CurrentImageSize");
 
-            //FitButton
-            _fitScaleButton = settingsArea.Q<Button>("Fit");
-            _fitScaleButton.RegisterCallback<MouseUpEvent>((e) => { AutoDrawRectFitting(); });
-
-            //ZoomInButton
-            _zoomInButton = settingsArea.Q<Button>("ZoomIn");
-            _zoomInButton.RegisterCallback<MouseUpEvent>((e) =>
-            {
-                _imageScale = Mathf.Min(MAXIMUM_IMAGE_SCALE, _imageScale + IMAGE_SCALE_STEP);
-                _rangeSelector.ResetSelection();
-                _imageUpdated = true; // 画像が更新されたことを示す
-            });
-
-            //ZoomOutButton
-            _zoomOutButton = settingsArea.Q<Button>("ZoomOut");
-            _zoomOutButton.RegisterCallback<MouseUpEvent>((e) =>
-            {
-                _imageScale = Mathf.Max(MINIMUM_IMAGE_SCALE, _imageScale - IMAGE_SCALE_STEP);
-                _rangeSelector.ResetSelection();
-                _imageUpdated = true; // 画像が更新されたことを示す
-            });
-
             //EditArea
             var editAreaImguiContainer = editArea.Q<IMGUIContainer>();
-            editArea.schedule.Execute(() =>
-            {
-                _uiHeight = editArea.resolvedStyle.height;
-                AutoDrawRectFitting();
-            }).StartingIn(32);
             editAreaImguiContainer.onGUIHandler = () =>
             {
                 // ウィンドウのサイズが変更された場合、選択をリセット
@@ -213,8 +179,8 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                 {
                     _rangeSelector.ResetSelection();
                     _lastWindowRect = position;
-
-                    _currentWindowRect = position;
+                    
+                    AutoDrawRectFitting();
                 }
 
                 //画像が変更された場合、選択をリセット
@@ -266,10 +232,19 @@ namespace mikinel.vrc.AutoImageSetter.Editor
 
                     if (_rangeSelector.CanDrawSelectionRect)
                     {
+                        // 選択範囲のグリッドを描画
                         DrawSelectionRect(SelectionRect);
                     }
 
                     EditorGUILayout.EndScrollView();
+                    
+                    //選択範囲のRectをウィンドウ下部に表示
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField($"X : {SelectionRect.x}", GUILayout.Width(100));
+                    EditorGUILayout.LabelField($"Y : {SelectionRect.y}", GUILayout.Width(100));
+                    EditorGUILayout.LabelField($"W : {SelectionRect.width}", GUILayout.Width(100));
+                    EditorGUILayout.LabelField($"H : {SelectionRect.height}", GUILayout.Width(100));
+                    EditorGUILayout.EndHorizontal();
                 }
                 else
                 {
@@ -289,13 +264,6 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             _currentImageSizeLabel.text = targetImage != null
                 ? $"{_currentRawImageSize.x}px x {_currentRawImageSize.y}px"
                 : "0px x 0px";
-            _fitScaleButton.style.display = _imageScale != _fitScale ? DisplayStyle.Flex : DisplayStyle.None;
-            _zoomOutButton.style.display = targetImage != null && _imageScale > MINIMUM_IMAGE_SCALE
-                ? DisplayStyle.Flex
-                : DisplayStyle.None;
-            _zoomInButton.style.display = targetImage != null && _imageScale < MAXIMUM_IMAGE_SCALE
-                ? DisplayStyle.Flex
-                : DisplayStyle.None;
         }
 
         /// <summary>
@@ -303,7 +271,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         /// </summary>
         private void CenterSelection()
         {
-            if (targetImage == null || SelectionRect.size == Vector2.zero)
+            if (targetImage == null || SelectionRect.size.x <= 0 || SelectionRect.size.y <= 0)
             {
                 return;
             }
@@ -390,14 +358,14 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         private void AutoDrawRectFitting()
         {
             // ウィンドウの幅と画像の幅に基づいてスケールを計算
-            var widthScale = (_currentWindowRect.width - 20) / _currentRawImageSize.x;
+            var widthScale = (position.width - 20) / _currentRawImageSize.x;
 
             // ウィンドウの高さとUIの高さを考慮して、高さに基づいてスケールを計算
-            var heightScale = (_uiHeight - 20) / _currentRawImageSize.y;
+            var editArea = rootVisualElement.Q<VisualElement>("EditArea");
+            var heightScale = (editArea.layout.height - 20) / _currentRawImageSize.y;
 
             // 幅と高さのスケールのうち、小さい方を採用
             _imageScale = Mathf.Min(widthScale, heightScale);
-            _fitScale = _imageScale;
 
             // 選択範囲をリセット
             _rangeSelector.ResetSelection();
@@ -412,9 +380,8 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             EditorGUI.DrawRect(selectionRect, new Color(0.5f, 0.5f, 0.5f, 0.25f));
             Handles.color = SELECTION_AREA_GRID_COLOR;
 
-            //DrawWireCubeの上辺が1px見切れるので、1px分下にずらす
-            var selectionRectWithOffset = new Rect(selectionRect.x, selectionRect.y + 1, selectionRect.width,
-                selectionRect.height);
+            //DrawWireCubeの上辺が1px見切れるので、1px分下にずらし、下辺は1pxはみ出るので、1px分上にずらす
+            var selectionRectWithOffset = new Rect(SelectionRect.x, SelectionRect.y + 1, SelectionRect.width, SelectionRect.height - 1);
             Handles.DrawWireCube(selectionRectWithOffset.center, selectionRectWithOffset.size);
 
             // 選択範囲に十字線を描画

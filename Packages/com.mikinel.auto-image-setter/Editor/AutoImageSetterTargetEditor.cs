@@ -66,9 +66,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
 
             if (GUILayout.Button("Set Image"))
             {
-                var desktopPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
-                var path = EditorUtility.OpenFilePanel("Select Image", desktopPath,
-                    string.Join(",", AutoImageSetterUtility.imageExtensions));
+                var path = AutoImageSetterUtility.OpenFilePanel();
                 if (!string.IsNullOrEmpty(path))
                 {
                     AutoImageSetterUtility.ImportImageAndSet(path, target);
