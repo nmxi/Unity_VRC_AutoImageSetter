@@ -162,9 +162,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             _cropImageButton = settingsArea.Q<Button>("CropImage");
             _cropImageButton.RegisterCallback<MouseUpEvent>((e) =>
             {
-                CropImage(AssetDatabase.GetAssetPath(targetImage), SelectionRect.x, SelectionRect.y,
-                    SelectionRect.width,
-                    SelectionRect.height);
+                CropImage(AssetDatabase.GetAssetPath(targetImage));
             });
 
             //CurrentImageSize
@@ -240,10 +238,11 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                     
                     //選択範囲のRectをウィンドウ下部に表示
                     EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.LabelField($"X : {SelectionRect.x}", GUILayout.Width(100));
-                    EditorGUILayout.LabelField($"Y : {SelectionRect.y}", GUILayout.Width(100));
-                    EditorGUILayout.LabelField($"W : {SelectionRect.width}", GUILayout.Width(100));
-                    EditorGUILayout.LabelField($"H : {SelectionRect.height}", GUILayout.Width(100));
+                    var cropRect = GetCropRect();
+                    EditorGUILayout.LabelField($"X : {(int)cropRect.x}", GUILayout.Width(100));
+                    EditorGUILayout.LabelField($"Y : {(int)cropRect.y}", GUILayout.Width(100));
+                    EditorGUILayout.LabelField($"W : {(int)cropRect.width}", GUILayout.Width(100));
+                    EditorGUILayout.LabelField($"H : {(int)cropRect.height}", GUILayout.Width(100));
                     EditorGUILayout.EndHorizontal();
                 }
                 else
@@ -441,23 +440,34 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             GUI.color = GRID_COLOR;
         }
 
+        private Rect GetCropRect()
+        {
+            var x = SelectionRect.x;
+            var y = SelectionRect.y;
+            var width = SelectionRect.width;
+            var height = SelectionRect.height;
+            
+            var scale = 1f / _imageScale;
+            x = (x - _drawTextureAdjustX) * scale;
+            y *= scale;
+            width *= scale;
+            height *= scale;
+            
+            return new Rect(x, y, width, height);
+        }
+
         /// <summary>
         /// 画像をトリミングして保存
         /// </summary>
         /// <param name="imagePath">画像のパス</param>
-        private void CropImage(string imagePath, float x, float y, float width, float height)
+        private void CropImage(string imagePath)
         {
             try
             {
-                var scale = 1f / _imageScale;
-                x = (x - _drawTextureAdjustX) * scale;
-                y *= scale;
-                width *= scale;
-                height *= scale;
-
                 using (var magickImage = new MagickImage(imagePath))
                 {
-                    var magickRectangle = new MagickGeometry((int)x, (int)y, (int)width, (int)height)
+                    var cropRect = GetCropRect();
+                    var magickRectangle = new MagickGeometry((int)cropRect.x, (int)cropRect.y, (int)cropRect.width, (int)cropRect.height)
                     {
                         IgnoreAspectRatio = isAdjustRatio
                     };
