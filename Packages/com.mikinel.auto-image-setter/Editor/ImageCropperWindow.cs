@@ -46,8 +46,12 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         private Button _fitScaleButton;
         private Button _zoomInButton;
         private Button _zoomOutButton;
+        private Label _cropRectXLabel;
+        private Label _cropRectYLabel;
+        private Label _cropRectWidthLabel;
+        private Label _cropRectHeightLabel;
 
-        readonly RangeSelector _rangeSelector = new ();
+        private readonly RangeSelector _rangeSelector = new ();
 
         /// <summary>
         /// 選択範囲
@@ -235,15 +239,6 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                     }
 
                     EditorGUILayout.EndScrollView();
-                    
-                    //選択範囲のRectをウィンドウ下部に表示
-                    EditorGUILayout.BeginHorizontal();
-                    var cropRect = GetCropRect();
-                    EditorGUILayout.LabelField($"X : {(int)cropRect.x}", GUILayout.Width(100));
-                    EditorGUILayout.LabelField($"Y : {(int)cropRect.y}", GUILayout.Width(100));
-                    EditorGUILayout.LabelField($"W : {(int)cropRect.width}", GUILayout.Width(100));
-                    EditorGUILayout.LabelField($"H : {(int)cropRect.height}", GUILayout.Width(100));
-                    EditorGUILayout.EndHorizontal();
                 }
                 else
                 {
@@ -251,6 +246,11 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                     _imageSelected = true;
                 }
             };
+            
+            _cropRectXLabel = editArea.Q<Label>("CropRectX");
+            _cropRectYLabel = editArea.Q<Label>("CropRectY");
+            _cropRectWidthLabel = editArea.Q<Label>("CropRectW");
+            _cropRectHeightLabel = editArea.Q<Label>("CropRectH");
         }
 
         private void OnGUI()
@@ -263,6 +263,16 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             _currentImageSizeLabel.text = targetImage != null
                 ? $"{_currentRawImageSize.x}px x {_currentRawImageSize.y}px"
                 : "0px x 0px";
+            
+            var cropRect = GetCropRect();
+            if (_cropRectXLabel != null && _cropRectYLabel != null && _cropRectWidthLabel != null &&
+                _cropRectHeightLabel != null)
+            {
+                _cropRectXLabel.text = $"X : {(cropRect.x >= 0 ? cropRect.x : 0):f0}";
+                _cropRectYLabel.text = $"Y : {(cropRect.y >= 0 ? cropRect.y : 0):f0}";
+                _cropRectWidthLabel.text = $"W : {(cropRect.width >= 0 ? cropRect.width : 0):f0}";
+                _cropRectHeightLabel.text = $"H : {(cropRect.height >= 0 ? cropRect.height : 0):f0}";
+            }
         }
 
         /// <summary>

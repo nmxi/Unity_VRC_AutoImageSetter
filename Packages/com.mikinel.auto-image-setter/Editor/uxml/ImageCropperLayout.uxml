@@ -46,5 +46,12 @@
     <ui:VisualElement name="Space" style="height: 5px;" />
     <ui:VisualElement name="EditArea" style="flex-grow: 1; background-color: rgba(34, 34, 34, 0.8);">
         <ui:IMGUIContainer style="flex-grow: 1;" />
+        <ui:VisualElement style="flex-direction: row; height: 20px;">
+            <ui:Label tabindex="-1" text="X : 0" parse-escape-sequences="true" display-tooltip-when-elided="true" name="CropRectX" style="flex-shrink: 1; width: 80px;" />
+            <ui:Label tabindex="-1" text="Y : 0" parse-escape-sequences="true" display-tooltip-when-elided="true" name="CropRectY" style="flex-shrink: 1; width: 80px;" />
+            <ui:Label tabindex="-1" text="W: 0" parse-escape-sequences="true" display-tooltip-when-elided="true" name="CropRectW" style="flex-shrink: 1; width: 80px;" />
+            <ui:Label tabindex="-1" text="H : 0" parse-escape-sequences="true" display-tooltip-when-elided="true" name="CropRectH" style="flex-shrink: 1; width: 80px;" />
+            <ui:VisualElement style="flex-grow: 1;" />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
