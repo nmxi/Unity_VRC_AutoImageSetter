@@ -25,15 +25,10 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         private Rect _lastWindowRect;
         private Rect _currentDrawRect; // 現在の画像の描画領域
         private float _drawTextureAdjustX; // 画像の描画領域の余白サイズ
-        private Vector2 _initialMousePosition; // 範囲選択の開始位置
-        private Vector2 _lastMousePosition; // 選択範囲の移動開始時のマウス位置
         private Vector2 _scrollPosition; // ScrollView のスクロール位置
-        private Rect _selectionRect; // 範囲選択の矩形領域
         private float _imageScale = 1f; // 画像のスケール管理用変数
         private bool _imageSelected = false; // 編集する画像が選択されたかどうかを追跡するフラグ
         private bool _imageUpdated = false; // 画像が更新されたかどうかを追跡するフラグ
-        private bool _isSelecting; // 範囲選択中かどうか
-        private bool _isMovingSelection = false; // 選択範囲を移動中かどうか
 
         // コールバック
         private Action<Texture2D> onCropImage;
@@ -51,6 +46,13 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         private Button _fitScaleButton;
         private Button _zoomInButton;
         private Button _zoomOutButton;
+
+        readonly RangeSelector _rangeSelector = new ();
+
+        /// <summary>
+        /// 選択範囲
+        /// </summary>
+        private Rect SelectionRect => _rangeSelector.SelectionRect;
 
         [MenuItem("MikinelTools/Image Cropper")]
         public static void ShowWindow()
@@ -92,6 +94,10 @@ namespace mikinel.vrc.AutoImageSetter.Editor
 
             window.hideSettings = hideSettings;
 
+            window._rangeSelector.IsAdjustRatio = isAdjustRatio;
+            window._rangeSelector.CropRatioWidth = cropRatioWidth;
+            window._rangeSelector.CropRatioHeight = cropRatioHeight;
+
             window.DrawGUI();
         }
 
@@ -119,17 +125,29 @@ namespace mikinel.vrc.AutoImageSetter.Editor
 
             //AdjustRatioToggle
             var adjustRatioToggle = settingsArea.Q<Toggle>("AdjustRatio");
-            adjustRatioToggle.RegisterValueChangedCallback((e) => { isAdjustRatio = e.newValue; });
+            adjustRatioToggle.RegisterValueChangedCallback((e) =>
+            {
+                isAdjustRatio = e.newValue;
+                _rangeSelector.IsAdjustRatio = e.newValue;
+            });
             adjustRatioToggle.value = isAdjustRatio;
 
             //RatioWidth
             var ratioWidthField = settingsArea.Q<FloatField>("Width");
-            ratioWidthField.RegisterValueChangedCallback((e) => { cropRatioWidth = e.newValue; });
+            ratioWidthField.RegisterValueChangedCallback((e) =>
+            {
+                cropRatioWidth = e.newValue;
+                _rangeSelector.CropRatioWidth = e.newValue;
+            });
             ratioWidthField.value = cropRatioWidth;
 
             //RatioHeight
             var ratioHeightField = settingsArea.Q<FloatField>("Height");
-            ratioHeightField.RegisterValueChangedCallback((e) => { cropRatioHeight = e.newValue; });
+            ratioHeightField.RegisterValueChangedCallback((e) =>
+            {
+                cropRatioHeight = e.newValue;
+                _rangeSelector.CropRatioHeight = e.newValue;
+            });
             ratioHeightField.value = cropRatioHeight;
 
             //CenterSelectionButton
@@ -144,9 +162,9 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             _cropImageButton = settingsArea.Q<Button>("CropImage");
             _cropImageButton.RegisterCallback<MouseUpEvent>((e) =>
             {
-                CropImage(AssetDatabase.GetAssetPath(targetImage), _selectionRect.x, _selectionRect.y,
-                    _selectionRect.width,
-                    _selectionRect.height);
+                CropImage(AssetDatabase.GetAssetPath(targetImage), SelectionRect.x, SelectionRect.y,
+                    SelectionRect.width,
+                    SelectionRect.height);
             });
 
             //CurrentImageSize
@@ -159,7 +177,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                 // ウィンドウのサイズが変更された場合、選択をリセット
                 if (_lastWindowRect.size != position.size)
                 {
-                    ResetSelection();
+                    _rangeSelector.ResetSelection();
                     _lastWindowRect = position;
                     
                     AutoDrawRectFitting();
@@ -206,22 +224,26 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                     // 画像の中心に白いグリッド線を描画
                     DrawCenterGrid(_currentDrawRect, scaledWidth, scaledHeight);
 
-                    HandleSelection(_currentDrawRect);
+                    _rangeSelector.HandleSelection(_currentDrawRect);
+                    if (_rangeSelector.NeedRepaint)
+                    {
+                        Repaint();
+                    }
 
-                    if (_isSelecting || _selectionRect.size.x > 0 || _selectionRect.size.y > 0)
+                    if (_rangeSelector.CanDrawSelectionRect)
                     {
                         // 選択範囲のグリッドを描画
-                        DrawSelectionRect();
+                        DrawSelectionRect(SelectionRect);
                     }
 
                     EditorGUILayout.EndScrollView();
                     
                     //選択範囲のRectをウィンドウ下部に表示
                     EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.LabelField($"X : {_selectionRect.x}", GUILayout.Width(100));
-                    EditorGUILayout.LabelField($"Y : {_selectionRect.y}", GUILayout.Width(100));
-                    EditorGUILayout.LabelField($"W : {_selectionRect.width}", GUILayout.Width(100));
-                    EditorGUILayout.LabelField($"H : {_selectionRect.height}", GUILayout.Width(100));
+                    EditorGUILayout.LabelField($"X : {SelectionRect.x}", GUILayout.Width(100));
+                    EditorGUILayout.LabelField($"Y : {SelectionRect.y}", GUILayout.Width(100));
+                    EditorGUILayout.LabelField($"W : {SelectionRect.width}", GUILayout.Width(100));
+                    EditorGUILayout.LabelField($"H : {SelectionRect.height}", GUILayout.Width(100));
                     EditorGUILayout.EndHorizontal();
                 }
                 else
@@ -235,7 +257,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         private void OnGUI()
         {
             var disableSelectionControlButtons =
-                targetImage == null || _selectionRect.size.x <= 0 || _selectionRect.size.y <= 0;
+                targetImage == null || SelectionRect.size.x <= 0 || SelectionRect.size.y <= 0;
             _centerSelectionButton.SetEnabled(!disableSelectionControlButtons);
             _cropImageButton.SetEnabled(!disableSelectionControlButtons);
 
@@ -249,7 +271,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         /// </summary>
         private void CenterSelection()
         {
-            if (targetImage == null || _selectionRect.size.x <= 0 || _selectionRect.size.y <= 0)
+            if (targetImage == null || SelectionRect.size.x <= 0 || SelectionRect.size.y <= 0)
             {
                 return;
             }
@@ -258,8 +280,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             var centerX = (_currentRawImageSize.x * _imageScale) / 2f + _drawTextureAdjustX;
             var centerY = (_currentRawImageSize.y * _imageScale) / 2f;
 
-            _selectionRect.x = centerX - _selectionRect.width / 2f;
-            _selectionRect.y = centerY - _selectionRect.height / 2f;
+            _rangeSelector.ChangeSelectionPosition(centerX - SelectionRect.width / 2f, centerY - SelectionRect.height / 2f);
 
             Repaint();
         }
@@ -285,7 +306,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             }
             else
             {
-                selectionAspectRatio = _selectionRect.width / _selectionRect.height;
+                selectionAspectRatio = SelectionRect.width / SelectionRect.height;
             }
 
             // 画像のスケール後のサイズを計算
@@ -310,7 +331,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             var centerX = (_currentRawImageSize.x * _imageScale) / 2f + _drawTextureAdjustX;
             var centerY = (_currentRawImageSize.y * _imageScale) / 2f;
 
-            _selectionRect = new Rect(centerX - width / 2f, centerY - height / 2f, width, height);
+            _rangeSelector.ChangeSelection(new Rect(centerX - width / 2f, centerY - height / 2f, width, height));
 
             Repaint();
         }
@@ -347,237 +368,31 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             _imageScale = Mathf.Min(widthScale, heightScale);
 
             // 選択範囲をリセット
-            ResetSelection();
-        }
-
-        /// <summary>
-        /// 範囲選択の処理
-        /// </summary>
-        /// <param name="imageRect">画像の表示範囲</param>
-        private void HandleSelection(Rect imageRect)
-        {
-            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 &&
-                imageRect.Contains(Event.current.mousePosition))
-            {
-                _isSelecting = true;
-                _initialMousePosition = Event.current.mousePosition;
-                _selectionRect = new Rect(Event.current.mousePosition, Vector2.zero);
-            }
-            else if (Event.current.type == EventType.MouseDown && Event.current.button == 1 &&
-                     _selectionRect.Contains(Event.current.mousePosition))
-            {
-                _isMovingSelection = true;
-                _lastMousePosition = Event.current.mousePosition;
-            }
-
-            if (_isSelecting)
-            {
-                if (Event.current.type == EventType.MouseDrag)
-                {
-                    var currentMousePosition = Event.current.mousePosition;
-
-                    // カーソル位置を画像の境界内にクランプ
-                    ClampPositionToImage(ref currentMousePosition, imageRect);
-
-                    var rectX = Mathf.Min(_initialMousePosition.x, currentMousePosition.x);
-                    var rectY = Mathf.Min(_initialMousePosition.y, currentMousePosition.y);
-                    var width = Mathf.Abs(currentMousePosition.x - _initialMousePosition.x);
-                    var height = Mathf.Abs(currentMousePosition.y - _initialMousePosition.y);
-
-                    if (isAdjustRatio)
-                    {
-                        var aspectRatio = cropRatioWidth / cropRatioHeight;
-                        if (width / height > aspectRatio)
-                        {
-                            // 高さを幅に合わせて調整
-                            height = width / aspectRatio;
-                            if (currentMousePosition.y < _initialMousePosition.y)
-                            {
-                                rectY = _initialMousePosition.y - height;
-                            }
-                        }
-                        else
-                        {
-                            // 幅を高さに合わせて調整
-                            width = height * aspectRatio;
-                            if (currentMousePosition.x < _initialMousePosition.x)
-                            {
-                                rectX = _initialMousePosition.x - width;
-                            }
-                        }
-                    }
-
-                    // 選択範囲が画像の境界外に出た場合、選択範囲を画像の境界内にクランプ
-                    if (rectY < imageRect.y)
-                    {
-                        // 上に出た場合
-                        height = _initialMousePosition.y - imageRect.y;
-                        if (isAdjustRatio)
-                        {
-                            width = height * (cropRatioWidth / cropRatioHeight);
-                        }
-
-                        if (_initialMousePosition.x < currentMousePosition.x)
-                        {
-                            rectX = _initialMousePosition.x;
-                        }
-                        else
-                        {
-                            rectX = _initialMousePosition.x - width;
-                        }
-
-                        if (_initialMousePosition.y < currentMousePosition.y)
-                        {
-                            rectY = _initialMousePosition.y;
-                        }
-                        else
-                        {
-                            rectY = _initialMousePosition.y - height;
-                        }
-                    }
-                    else if (rectX < imageRect.x)
-                    {
-                        // 左に出た場合
-                        width = _initialMousePosition.x - imageRect.x;
-                        if (isAdjustRatio)
-                        {
-                            height = width * (cropRatioHeight / cropRatioWidth);
-                        }
-
-                        if (_initialMousePosition.x < currentMousePosition.x)
-                        {
-                            rectX = _initialMousePosition.x;
-                        }
-                        else
-                        {
-                            rectX = _initialMousePosition.x - width;
-                        }
-
-                        if (_initialMousePosition.y < currentMousePosition.y)
-                        {
-                            rectY = _initialMousePosition.y;
-                        }
-                        else
-                        {
-                            rectY = _initialMousePosition.y - height;
-                        }
-                    }
-                    else if (rectX + width > imageRect.x + imageRect.width)
-                    {
-                        // 右に出た場合
-                        width = imageRect.x + imageRect.width - rectX;
-                        if (isAdjustRatio)
-                        {
-                            height = width * (cropRatioHeight / cropRatioWidth);
-                        }
-
-                        if (_initialMousePosition.x < currentMousePosition.x)
-                        {
-                            rectX = _initialMousePosition.x;
-                        }
-                        else
-                        {
-                            rectX = _initialMousePosition.x - width;
-                        }
-
-                        if (_initialMousePosition.y < currentMousePosition.y)
-                        {
-                            rectY = _initialMousePosition.y;
-                        }
-                        else
-                        {
-                            rectY = _initialMousePosition.y - height;
-                        }
-                    }
-                    else if (rectY + height > imageRect.y + imageRect.height)
-                    {
-                        // 下に出た場合
-                        height = imageRect.y + imageRect.height - rectY;
-                        if (isAdjustRatio)
-                        {
-                            width = height * (cropRatioWidth / cropRatioHeight);
-                        }
-
-                        if (_initialMousePosition.x < currentMousePosition.x)
-                        {
-                            rectX = _initialMousePosition.x;
-                        }
-                        else
-                        {
-                            rectX = _initialMousePosition.x - width;
-                        }
-                    }
-
-                    _selectionRect = new Rect(rectX, rectY, width, height);
-                    Repaint();
-                }
-                else if (Event.current.type == EventType.MouseUp)
-                {
-                    _isSelecting = false;
-                }
-            }
-            else if (_isMovingSelection)
-            {
-                if (Event.current.type == EventType.MouseDrag && Event.current.button == 1)
-                {
-                    var delta = Event.current.mousePosition - _lastMousePosition;
-                    _selectionRect.position += delta;
-                    ClampSelectionToImageRect(ref _selectionRect, imageRect);
-                    _lastMousePosition = Event.current.mousePosition;
-                    Repaint();
-                }
-                else if (Event.current.type == EventType.MouseUp && Event.current.button == 1)
-                {
-                    _isMovingSelection = false;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 選択範囲が画像の外に出ないようにクランプ
-        /// </summary>
-        /// <param name="selection">選択範囲</param>
-        /// <param name="imageRect">画像の表示範囲</param>
-        private static void ClampSelectionToImageRect(ref Rect selection, Rect imageRect)
-        {
-            var xMax = imageRect.x + imageRect.width - selection.width;
-            var yMax = imageRect.y + imageRect.height - selection.height;
-            selection.x = Mathf.Clamp(selection.x, imageRect.x, xMax);
-            selection.y = Mathf.Clamp(selection.y, imageRect.y, yMax);
-        }
-
-        /// <summary>
-        /// カーソル位置を画像の境界内にクランプ
-        /// </summary>
-        /// <param name="cursorPosition">カーソル位置</param>
-        /// <param name="imageRect">画像の表示範囲</param>
-        private static void ClampPositionToImage(ref Vector2 cursorPosition, Rect imageRect)
-        {
-            cursorPosition.x = Mathf.Clamp(cursorPosition.x, imageRect.x, imageRect.x + imageRect.width);
-            cursorPosition.y = Mathf.Clamp(cursorPosition.y, imageRect.y, imageRect.y + imageRect.height);
+            _rangeSelector.ResetSelection();
         }
 
         /// <summary>
         /// 選択範囲のグリッドを描画
         /// </summary>
-        private void DrawSelectionRect()
+        /// <param name="selectionRect">選択範囲</param>
+        private void DrawSelectionRect(Rect selectionRect)
         {
-            EditorGUI.DrawRect(_selectionRect, new Color(0.5f, 0.5f, 0.5f, 0.25f));
+            EditorGUI.DrawRect(selectionRect, new Color(0.5f, 0.5f, 0.5f, 0.25f));
             Handles.color = SELECTION_AREA_GRID_COLOR;
 
             //DrawWireCubeの上辺が1px見切れるので、1px分下にずらし、下辺は1pxはみ出るので、1px分上にずらす
-            var selectionRectWithOffset = new Rect(_selectionRect.x, _selectionRect.y + 1, _selectionRect.width, _selectionRect.height - 1);
+            var selectionRectWithOffset = new Rect(SelectionRect.x, SelectionRect.y + 1, SelectionRect.width, SelectionRect.height - 1);
             Handles.DrawWireCube(selectionRectWithOffset.center, selectionRectWithOffset.size);
 
             // 選択範囲に十字線を描画
-            Handles.DrawLine(new Vector2(_selectionRect.x, _selectionRect.y + _selectionRect.height / 2),
-                new Vector2(_selectionRect.x + _selectionRect.width, _selectionRect.y + _selectionRect.height / 2));
-            Handles.DrawLine(new Vector2(_selectionRect.x + _selectionRect.width / 2, _selectionRect.y),
-                new Vector2(_selectionRect.x + _selectionRect.width / 2, _selectionRect.y + _selectionRect.height));
+            Handles.DrawLine(new Vector2(selectionRect.x, selectionRect.y + selectionRect.height / 2),
+                new Vector2(selectionRect.x + selectionRect.width, selectionRect.y + selectionRect.height / 2));
+            Handles.DrawLine(new Vector2(selectionRect.x + selectionRect.width / 2, selectionRect.y),
+                new Vector2(selectionRect.x + selectionRect.width / 2, selectionRect.y + selectionRect.height));
 
             var scale = 1f / _imageScale;
-            var scaledSelectionWidth = _selectionRect.width * scale;
-            var scaledSelectionHeight = _selectionRect.height * scale;
+            var scaledSelectionWidth = selectionRect.width * scale;
+            var scaledSelectionHeight = selectionRect.height * scale;
             if (scaledSelectionWidth >= 120 && scaledSelectionHeight >= 40)
             {
                 var defaultColor = GUI.color;
@@ -591,7 +406,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                     var ratioText = $"{cropRatioWidthStr} : {cropRatioHeightStr}";
 
                     var ratioTextSize = EditorStyles.label.CalcSize(new GUIContent(ratioText));
-                    var ratioTextRect = new Rect(_selectionRect.x, _selectionRect.y, ratioTextSize.x, ratioTextSize.y);
+                    var ratioTextRect = new Rect(selectionRect.x, selectionRect.y, ratioTextSize.x, ratioTextSize.y);
                     EditorGUI.DrawRect(ratioTextRect, SELECTION_AREA_TEXT_BG_COLOR);
 
                     GUI.color = SELECTION_AREA_TEXT_COLOR;
@@ -602,8 +417,8 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                 // 選択範囲のサイズを選択範囲の右下に表示
                 var sizeText = $"{scaledSelectionWidth:f0} x {scaledSelectionHeight:f0}";
                 var sizeTextSize = EditorStyles.label.CalcSize(new GUIContent(sizeText));
-                var sizeTextRect = new Rect(_selectionRect.x + _selectionRect.width - sizeTextSize.x,
-                    _selectionRect.y + _selectionRect.height - sizeTextSize.y, sizeTextSize.x, sizeTextSize.y);
+                var sizeTextRect = new Rect(selectionRect.x + selectionRect.width - sizeTextSize.x,
+                    selectionRect.y + selectionRect.height - sizeTextSize.y, sizeTextSize.x, sizeTextSize.y);
                 EditorGUI.DrawRect(sizeTextRect, SELECTION_AREA_TEXT_BG_COLOR);
 
                 defaultColor = GUI.color;
@@ -611,15 +426,6 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                 EditorGUI.LabelField(sizeTextRect, sizeText, EditorStyles.label);
                 GUI.color = defaultColor;
             }
-        }
-
-        /// <summary>
-        /// 選択範囲をリセット
-        /// </summary>
-        private void ResetSelection()
-        {
-            _isSelecting = false;
-            _selectionRect = Rect.zero;
         }
 
         /// <summary>
@@ -665,7 +471,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                     UpdateCurrentImageSize();
 
                     //reset selectionRect
-                    ResetSelection();
+                    _rangeSelector.ResetSelection();
 
                     //auto draw rect fitting
                     AutoDrawRectFitting();
