@@ -48,6 +48,12 @@ public class AutoImageSetterTarget : MonoBehaviour, VRC.SDKBase.IEditorOnly
         EditorSceneManager.MarkSceneDirty(renderer.gameObject.scene);
     }
     
+    public Texture2D GetTexture2D()
+    {
+        var renderer = GetComponent<Renderer>();
+        return (Texture2D)renderer.sharedMaterial.mainTexture;
+    }
+    
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;

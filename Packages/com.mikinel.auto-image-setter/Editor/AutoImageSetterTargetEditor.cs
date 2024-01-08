@@ -76,6 +76,33 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                 target.CreateNewMaterial();
                 AutoImageSetterUtility.OpenFilePanelAndImportImageAndSet(target);
             }
+            
+            EditorGUILayout.Space();
+
+            //horizontal
+            EditorGUILayout.BeginHorizontal();
+            
+            if (GUILayout.Button("RotateImage : -90°"))
+            {
+                var texture = target.GetTexture2D();
+                if (texture != null)
+                {
+                    var texturePath = AssetDatabase.GetAssetPath(texture);
+                    ImageMagickUtility.RotateImage(texturePath, -90);
+                }
+            }
+            
+            if (GUILayout.Button("RotateImage : 90°"))
+            {
+                var texture = target.GetTexture2D();
+                if (texture != null)
+                {
+                    var texturePath = AssetDatabase.GetAssetPath(texture);
+                    ImageMagickUtility.RotateImage(texturePath, 90);
+                }
+            }
+
+            EditorGUILayout.EndHorizontal();
 
             EditorGUI.EndDisabledGroup();
 

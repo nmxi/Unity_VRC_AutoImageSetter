@@ -60,5 +60,14 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             magickImage.Write(imagePath);
             AssetDatabase.Refresh();
         }
+        
+        public static void RotateImage(string imagePath, int degree)
+        {
+            using var magickImage = new MagickImage(imagePath);
+            magickImage.Rotate(degree);
+            magickImage.RePage();
+            magickImage.Write(imagePath);
+            AssetDatabase.Refresh();
+        }
     }   
 }
