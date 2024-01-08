@@ -1,7 +1,7 @@
 {
   "name": "com.mikinel.auto-image-setter",
   "displayName": "Auto Image Setter",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "unity": "2022.3",
   "description": "Auto Image Setter",
   "gitDependencies": {},
