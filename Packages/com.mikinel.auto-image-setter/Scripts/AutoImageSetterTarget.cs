@@ -25,6 +25,28 @@ public class AutoImageSetterTarget : MonoBehaviour, VRC.SDKBase.IEditorOnly
         EditorSceneManager.MarkSceneDirty(renderer.gameObject.scene);
     }
     
+    [ContextMenu("Create New Material")]
+    public void CreateNewMaterial()
+    {
+        var renderer = GetComponent<Renderer>();
+        
+        // Undoの記録を開始する
+        Undo.RecordObject(renderer, "Create New Material");
+
+        // 現在設定されているMaterialのShaderを取得する
+        var shader = renderer.sharedMaterial == null ? Shader.Find("Standard") : renderer.sharedMaterial.shader;
+
+        // Materialを設定する
+        var newMaterial = new Material(shader)
+        {
+            name = $"AutoImageSetterTarget_{gameObject.name}"
+        };
+        renderer.sharedMaterial = newMaterial;
+
+        // シーンが変更されたことをUnityエディタに通知する
+        EditorSceneManager.MarkSceneDirty(renderer.gameObject.scene);
+    }
+    
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;

@@ -65,7 +65,7 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                     EditorGUILayout.BeginHorizontal(elementStyle);
 
                     //Focus
-                    if (GUILayout.Button("Focus", GUILayout.Width(50)))
+                    if (GUILayout.Button("Select", GUILayout.Width(50)))
                     {
                         SelectAndFocus(target.gameObject);
                     }
@@ -73,13 +73,10 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                     EditorGUILayout.LabelField(target.name);
 
                     //SetImage
-                    if (GUILayout.Button("SetImage", GUILayout.Width(70)))
+                    if (GUILayout.Button("SetImageToNewMat", GUILayout.Width(140)))
                     {
-                        var path = AutoImageSetterUtility.OpenFilePanel();
-                        if (!string.IsNullOrEmpty(path))
-                        {
-                            AutoImageSetterUtility.ImportImageAndSet(path, target);
-                        }
+                        target.CreateNewMaterial();
+                        AutoImageSetterUtility.OpenFilePanelAndImportImageAndSet(target);
                     }
 
                     EditorGUILayout.EndHorizontal();

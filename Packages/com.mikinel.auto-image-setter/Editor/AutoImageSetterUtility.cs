@@ -12,6 +12,15 @@ namespace mikinel.vrc.AutoImageSetter.Editor
 
         private static readonly string pathSaveKey = "AutoImageSetterUtility_LastPath";
 
+        public static void OpenFilePanelAndImportImageAndSet(AutoImageSetterTarget target)
+        {
+            var path = OpenFilePanel();
+            if (!string.IsNullOrEmpty(path))
+            {
+                ImportImageAndSet(path, target);
+            }
+        }
+        
         public static string OpenFilePanel()
         {
             // 前回のパスを取得、なければマイドキュメントを指定

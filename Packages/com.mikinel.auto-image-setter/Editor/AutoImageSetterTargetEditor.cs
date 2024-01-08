@@ -29,6 +29,8 @@ namespace mikinel.vrc.AutoImageSetter.Editor
             var target = (AutoImageSetterTarget)serializedObject.targetObject;
 
             EditorGUI.BeginChangeCheck();
+            
+            EditorGUI.BeginDisabledGroup(Application.isPlaying);
 
             target.customRatio = EditorGUILayout.Toggle("Custom Ratio", target.customRatio);
             if (target.customRatio)
@@ -63,14 +65,16 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                     target.ratio = COMMON_RATIOS[key];
                 }
             }
-
+            
             if (GUILayout.Button("Set Image"))
             {
-                var path = AutoImageSetterUtility.OpenFilePanel();
-                if (!string.IsNullOrEmpty(path))
-                {
-                    AutoImageSetterUtility.ImportImageAndSet(path, target);
-                }
+                AutoImageSetterUtility.OpenFilePanelAndImportImageAndSet(target);
+            }
+
+            if (GUILayout.Button("Set Image To New Material"))
+            {
+                target.CreateNewMaterial();
+                AutoImageSetterUtility.OpenFilePanelAndImportImageAndSet(target);
             }
 
             EditorGUI.EndDisabledGroup();
