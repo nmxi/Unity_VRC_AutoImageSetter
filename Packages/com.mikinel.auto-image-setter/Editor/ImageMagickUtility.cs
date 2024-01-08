@@ -46,5 +46,19 @@ namespace mikinel.vrc.AutoImageSetter.Editor
                 return new Vector2(0, 0);
             }
         }
+
+        public static void CropImage(string imagePath, int x, int y, int width, int height, bool isAdjustRatio)
+        {
+            using var magickImage = new MagickImage(imagePath);
+            var magickRectangle = new MagickGeometry(x, y, width, height)
+            {
+                IgnoreAspectRatio = isAdjustRatio
+            };
+
+            magickImage.Crop(magickRectangle);
+            magickImage.RePage();
+            magickImage.Write(imagePath);
+            AssetDatabase.Refresh();
+        }
     }   
 }

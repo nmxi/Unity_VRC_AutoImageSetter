@@ -474,28 +474,18 @@ namespace mikinel.vrc.AutoImageSetter.Editor
         {
             try
             {
-                using (var magickImage = new MagickImage(imagePath))
-                {
-                    var cropRect = GetCropRect();
-                    var magickRectangle = new MagickGeometry((int)cropRect.x, (int)cropRect.y, (int)cropRect.width, (int)cropRect.height)
-                    {
-                        IgnoreAspectRatio = isAdjustRatio
-                    };
+                var cropRect = GetCropRect();
+                ImageMagickUtility.CropImage(imagePath, (int)cropRect.x, (int)cropRect.y, (int)cropRect.width,
+                    (int)cropRect.height, isAdjustRatio);
+                
+                //Reload size
+                UpdateCurrentImageSize();
 
-                    magickImage.Crop(magickRectangle);
-                    magickImage.RePage();
-                    magickImage.Write(imagePath);
-                    AssetDatabase.Refresh();
+                //reset selectionRect
+                _rangeSelector.ResetSelection();
 
-                    //Reload size
-                    UpdateCurrentImageSize();
-
-                    //reset selectionRect
-                    _rangeSelector.ResetSelection();
-
-                    //auto draw rect fitting
-                    AutoDrawRectFitting();
-                }
+                //auto draw rect fitting
+                AutoDrawRectFitting();
 
                 Debug.Log("Image cropped and saved successfully.");
 
