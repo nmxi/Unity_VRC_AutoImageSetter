@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -88,3 +89,4 @@ public class AutoImageSetterTarget : MonoBehaviour, VRC.SDKBase.IEditorOnly
         return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
     }
 }
+#endif
